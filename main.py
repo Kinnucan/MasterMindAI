@@ -13,9 +13,10 @@ from Code import Code
 
 if __name__ == '__main__':
     manager = GameManager()
-    pinList = [CodePin("purple"), CodePin("orange"), CodePin("yellow"), CodePin("blue")]
-    manager.generateCode()
+    testCode = Code([])
+    testCode.setCode([CodePin("purple"), CodePin("orange"), CodePin("yellow"), CodePin("blue")])
+    manager.setCode(testCode)
     code = manager.code
-    code.printCode()
+    print(manager.guessCode(testCode))
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
