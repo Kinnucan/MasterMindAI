@@ -1,22 +1,38 @@
 # import necessary classes
-from GameManager import GameManager
-from CodePin import CodePin
-from Code import Code
+from MasterMind.GameManager import *
+from MasterMind.CodePin import *
+from MasterMind.Code import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from MasterMind.Agents.RandomAgent import *
+from MasterMind.Agents.HumanAgent import *
 
 
-# def print_hi(name):
-#     # Use a breakpoint in the code line below to debug your script.
-#     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def environmentTests():
+    testCode = Code([])
+    # print(testCode)
+    manager = GameManager(testCode)
+    # print(manager.guessCode(testCode))
+
+    testCode2 = Code([CodePin("purple"), CodePin("orange"), CodePin("yellow"), CodePin("blue")])
+    manager2 = GameManager(testCode2)
+    guess2 = Code([CodePin("yellow"), CodePin("orange"), CodePin("yellow"), CodePin("blue")])
+    print(manager2.guessCode(guess2))
+    print(manager2.guessCode(guess2))
+
+
+def simpleAgentTests():
+    newGame = GameManager()
+    randy = RandomAgent(newGame, verbose=True)
+    randy.play()
+    print("---------------------")
+    newGame = GameManager()
+    you = HumanAgent(newGame)
+    you.play()
+
+
 
 if __name__ == '__main__':
-    manager = GameManager()
-    testCode = Code([])
-    testCode.setCode([CodePin("purple"), CodePin("orange"), CodePin("yellow"), CodePin("blue")])
-    manager.setCode(testCode)
-    code = manager.code
-    print(manager.guessCode(testCode))
+    simpleAgentTests()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+
