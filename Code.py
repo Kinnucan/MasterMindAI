@@ -42,6 +42,17 @@ class Code:
                             else:
                                 self.pinList.append(CodePin("purple"))
 
+    # set the code
+    def setCode(self, code):
+        pinList = []
+        for pin in code:
+            if not isinstance(pin, CodePin):
+                print("Please enter a list of pins.")
+                # TODO: Add an error call here
+            else:
+                pinList.append(pin)
+        self.pinList = pinList
+
     # print out the colors of each of the pins in the code
     def printCode(self):
         codeString = ""
