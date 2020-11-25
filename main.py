@@ -1,10 +1,10 @@
 # import necessary classes
-from MasterMind.GameManager import *
-from MasterMind.CodePin import *
-from MasterMind.Code import *
+from GameManager import *
+from CodePin import *
+from Code import *
 
-from MasterMind.Agents.RandomAgent import *
-from MasterMind.Agents.HumanAgent import *
+from Agents.RandomAgent import *
+from Agents.HumanAgent import *
 
 
 def environmentTests():
@@ -19,6 +19,10 @@ def environmentTests():
     print(manager2.guessCode(guess2))
     print(manager2.guessCode(guess2))
 
+    for i in range(10):
+        x, y = Code([]), Code([])
+        print(x.getClue(y) == y.getClue(x))
+
 
 def simpleAgentTests():
     newGame = GameManager()
@@ -32,6 +36,7 @@ def simpleAgentTests():
 
 
 if __name__ == '__main__':
+    #environmentTests()
     simpleAgentTests()
 
 

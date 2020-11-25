@@ -2,6 +2,7 @@
 
 COLOR_LIST = ["red", "orange", "yellow", "green", "blue", "purple"] # a list of the six acceptable colors
 COLOR_NUMBER = len(COLOR_LIST)
+PIN_NUMBER = 4
 
 
 class CodePin:
