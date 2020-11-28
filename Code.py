@@ -4,6 +4,32 @@ from CodePin import *
 from Clue import *
 
 
+def makeCode(numList):
+    #given a list of integers from 1 to COLOR_NUMBER, creates a corresponding Code object
+    #(for instance, [1,1,2,2] would return the code "red red orange orange", under the normal 4-peg, 6-color rules)
+    if len(numList) != PIN_NUMBER:
+        return None
+    colorList = []
+    for i in numList:
+        if i-1 not in range(len(COLOR_NUMBER)):
+            return None
+        colorList.append(COLOR_LIST[i-1])
+    return Code([CodePin(col) for col in colorList])
+
+
+def generateNumberPermuations(K, P):
+    allPermutations = []
+    if P == 0:
+        return allPermutations
+    for i in range(1, K+1):
+        allPermutations += [[i]+permuation for permuation in generateNumberPermuations(K, P-1)]
+    return allPermutations
+
+def generateAllCodes():
+    return [makeCode(perm) for perm in generateNumberPermuations(COLOR_NUMBER, PIN_NUMBER)]
+
+
+
 
 
 class Code:

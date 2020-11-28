@@ -4,6 +4,7 @@ from CodePin import *
 from Code import *
 
 from Agents.RandomAgent import *
+from Agents.RandomEligibleAgent import *
 from Agents.HumanAgent import *
 
 
@@ -33,11 +34,17 @@ def simpleAgentTests():
     you = HumanAgent(newGame)
     you.play()
 
+def betterAgentTests():
+    newGame = GameManager()
+    randy2 = RandomEligibleAgent(newGame, verbose=True)
+    randy2.play()
+
 
 
 if __name__ == '__main__':
     #environmentTests()
-    simpleAgentTests()
+    #simpleAgentTests()
+    betterAgentTests()
 
 
 

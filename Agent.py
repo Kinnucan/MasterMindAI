@@ -26,3 +26,18 @@ class Agent:
                     print("Won in", self.environment.getGuessNumber(), "guesses!")
                 break
         return self.environment.getGuessNumber()
+
+    # ============================================
+    # some helper function(s) for agents
+    # ============================================
+    def isConsistent(self, guess):
+        #checks if a guess is consistent with the evidence
+        prevGuesses = self.environment.getGuessList()
+        prevClues = self.environment.getClueList()
+        for i in range(self.environment.getGuessNumber()):
+            if guess.getClue(prevGuesses[i]) != prevClues[i]:
+                return False
+        return True
+
+
+

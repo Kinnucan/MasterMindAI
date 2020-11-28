@@ -43,5 +43,8 @@ class GameManager:
     def getGuessList(self):
         return self.guessList
 
+    def getClueList(self):
+        return self.clueList
+
     def getGuessNumber(self):
         return len(self.guessList)
