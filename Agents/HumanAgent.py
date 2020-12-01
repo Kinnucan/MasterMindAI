@@ -1,4 +1,4 @@
-from MasterMind.Agent import *
+from Agent import *
 
 class HumanAgent(Agent):
 

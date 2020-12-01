@@ -1,9 +1,36 @@
 # a combination of four CodePins
 import random
-from MasterMind.CodePin import *
+from CodePin import *
+from Clue import *
 
 
-PIN_NUMBER = 4
+def makeCode(numList):
+    #given a list of integers from 1 to COLOR_NUMBER, creates a corresponding Code object
+    #(for instance, [1,1,2,2] would return the code "red red orange orange", under the normal 4-peg, 6-color rules)
+    if len(numList) != PIN_NUMBER:
+        return None
+    colorList = []
+    for i in numList:
+        if i-1 not in range(len(COLOR_NUMBER)):
+            return None
+        colorList.append(COLOR_LIST[i-1])
+    return Code([CodePin(col) for col in colorList])
+
+
+def generateNumberPermuations(K, P):
+    allPermutations = []
+    if P == 0:
+        return allPermutations
+    for i in range(1, K+1):
+        allPermutations += [[i]+permuation for permuation in generateNumberPermuations(K, P-1)]
+    return allPermutations
+
+def generateAllCodes():
+    return [makeCode(perm) for perm in generateNumberPermuations(COLOR_NUMBER, PIN_NUMBER)]
+
+
+
+
 
 class Code:
 
@@ -38,6 +65,38 @@ class Code:
     def cleanMatches(self):
         for pin in self.pinList:
             pin.unmatch()
+
+    def getClue(self, guess):
+        output = Clue()
+        # check every pin to see if there are any exact (i.e., black) matches
+        for i in range(PIN_NUMBER):
+            codePin = self.getPinList()[i]
+            guessPin = guess.getPinList()[i]
+            if codePin == guessPin:
+                # add a "black pin" to the clue to indicate a perfect match exists
+                output.augmentBlackPegs()
+                # denote the pins as having been matched
+                guessPin.match()
+                codePin.match()
+        # check every pin in the hidden code to see if there are any inexact (i.e., white) matches
+        for codeInd in range(PIN_NUMBER):
+            codePin = self.getPinList()[codeInd]
+            # run through all of the pins in the guess
+            for guessInd in range(PIN_NUMBER):
+                guessPin = guess.getPinList()[guessInd]
+                # if the pin has been previously matched, skip over it. Otherwise, check it
+                if not (guessPin.matched or codePin.matched):
+                    if codePin == guessPin:
+                        if codeInd != guessInd:
+                            # add a "white pin" to the clue list to indicate correct color, but wrong position
+                            output.augmentWhitePegs()
+                            # denote the pins as having been matched
+                            guessPin.match()
+                            codePin.match()
+        # we don't need the matchings anymore
+        guess.cleanMatches()
+        self.cleanMatches()
+        return output
 
     # print out the colors of each of the pins in the code
     def __str__(self):
