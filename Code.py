@@ -1,13 +1,41 @@
 # a combination of four CodePins
 import random
-from CodePin import CodePin
+from CodePin import *
+from Clue import *
+
+
+def makeCode(numList):
+    #given a list of integers from 1 to COLOR_NUMBER, creates a corresponding Code object
+    #(for instance, [1,1,2,2] would return the code "red red orange orange", under the normal 4-peg, 6-color rules)
+    if len(numList) != PIN_NUMBER:
+        return None
+    colorList = []
+    for i in numList:
+        if i-1 not in range(len(COLOR_NUMBER)):
+            return None
+        colorList.append(COLOR_LIST[i-1])
+    return Code([CodePin(col) for col in colorList])
+
+
+def generateNumberPermuations(K, P):
+    allPermutations = []
+    if P == 0:
+        return allPermutations
+    for i in range(1, K+1):
+        allPermutations += [[i]+permuation for permuation in generateNumberPermuations(K, P-1)]
+    return allPermutations
+
+def generateAllCodes():
+    return [makeCode(perm) for perm in generateNumberPermuations(COLOR_NUMBER, PIN_NUMBER)]
+
+
+
 
 
 class Code:
-    colorList = ["red", "orange", "yellow", "green", "blue", "purple"]  # a list of the six acceptable colors
-    pinList = [] # what will hold the code (order matters)
 
     def __init__(self, pinList):
+        self.pinList = pinList # what will hold the code (order matters)
         # if given an empty list, create a random code
         if len(pinList) == 0:
             self.randomize()
@@ -17,45 +45,65 @@ class Code:
                 if type(pin) != CodePin:
                     print("Given list contains at least one item that is not a CodePin.")
                     valid = False
+                elif len(pinList) != PIN_NUMBER:
+                    print("Given list has wrong number of pins.")
+                    valid = False
             if valid:
                 self.pinList = pinList
 
     # create a random code
     def randomize(self):
         # each loop adds a pin of a random color to pinList
-        for x in range(4):
-            num = random.randrange(0, 6)
-            if num == 0:
-                self.pinList.append(CodePin("red"))
-            else:
-                if num == 1:
-                    self.pinList.append(CodePin("orange"))
-                else:
-                    if num == 2:
-                        self.pinList.append(CodePin("yellow"))
-                    else:
-                        if num == 3:
-                            self.pinList.append(CodePin("green"))
-                        else:
-                            if num == 4:
-                                self.pinList.append(CodePin("blue"))
-                            else:
-                                self.pinList.append(CodePin("purple"))
+        self.pinList = []
+        for x in range(PIN_NUMBER):
+            num = random.randrange(0, COLOR_NUMBER)
+            self.pinList.append(CodePin(COLOR_LIST[num]))
 
-    # set the code
-    def setCode(self, code):
-        pinList = []
-        for pin in code:
-            if not isinstance(pin, CodePin):
-                print("Please enter a list of pins.")
-                # TODO: Add an error call here
-            else:
-                pinList.append(pin)
-        self.pinList = pinList
+    def getPinList(self):
+        return self.pinList
+
+    def cleanMatches(self):
+        for pin in self.pinList:
+            pin.unmatch()
+
+    def getClue(self, guess):
+        output = Clue()
+        # check every pin to see if there are any exact (i.e., black) matches
+        for i in range(PIN_NUMBER):
+            codePin = self.getPinList()[i]
+            guessPin = guess.getPinList()[i]
+            if codePin == guessPin:
+                # add a "black pin" to the clue to indicate a perfect match exists
+                output.augmentBlackPegs()
+                # denote the pins as having been matched
+                guessPin.match()
+                codePin.match()
+        # check every pin in the hidden code to see if there are any inexact (i.e., white) matches
+        for codeInd in range(PIN_NUMBER):
+            codePin = self.getPinList()[codeInd]
+            # run through all of the pins in the guess
+            for guessInd in range(PIN_NUMBER):
+                guessPin = guess.getPinList()[guessInd]
+                # if the pin has been previously matched, skip over it. Otherwise, check it
+                if not (guessPin.matched or codePin.matched):
+                    if codePin == guessPin:
+                        if codeInd != guessInd:
+                            # add a "white pin" to the clue list to indicate correct color, but wrong position
+                            output.augmentWhitePegs()
+                            # denote the pins as having been matched
+                            guessPin.match()
+                            codePin.match()
+        # we don't need the matchings anymore
+        guess.cleanMatches()
+        self.cleanMatches()
+        return output
 
     # print out the colors of each of the pins in the code
-    def printCode(self):
+    def __str__(self):
         codeString = ""
         for pin in self.pinList:
             codeString = codeString + pin.color + " "
-        print(codeString)
+        return codeString
+
+    def __eq__(self,other):
+        return self.pinList == other.getPinList()
