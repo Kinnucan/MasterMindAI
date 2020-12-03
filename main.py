@@ -5,7 +5,7 @@ from Code import *
 
 from Agents.RandomAgent import *
 from Agents.RandomEligibleAgent import *
-from Agents.HumanAgent import *
+from Agents.Player import *
 
 
 def environmentTests():

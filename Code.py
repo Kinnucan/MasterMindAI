@@ -62,6 +62,13 @@ class Code:
     def getPinList(self):
         return self.pinList
 
+    def getColors(self):
+        clist = []
+        for pin in self.pinList:
+            if pin.color not in clist:
+                clist.append(pin.color)
+        return clist
+
     def cleanMatches(self):
         for pin in self.pinList:
             pin.unmatch()
