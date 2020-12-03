@@ -3,9 +3,11 @@ from GameManager import *
 from CodePin import *
 from Code import *
 from itertools import permutations
+from Clue import *
 
 
 class Knuth:
+    # Implements the 5-guess algorithm designed by Donald Knuth
 
     def __init__(self, gameManager):
         self.Set = self.generateSet()
@@ -35,15 +37,22 @@ class Knuth:
     def removeCodes(self, blackPegs, whitePegs):
         for i in self.Set:
             # You'll need to modify this to be similar to the first line of code under the play function
-            response = self.checkGuess(i)
+            response = self.checkGuess([CodePin(i[0]), CodePin(i[1]), CodePin(i[2]), CodePin(i[3])])
             if (response.whitePegs != whitePegs or response.blackPegs != blackPegs):
                 self.Set.remove(i)
 
     def checkGuess(self, guess):
-        # Implement code here similar to that of guessCode in GameManager.py
-        # You'll want it to check if the guess produces the same number of white pegs and black pegs, but without
-        # changing the state of the actual game
-        return 0
+        newClue = Clue()
+        valid = True
+        if str(type(guess)) != "<class 'Code.Code'>":
+            print("The object provided is not a valid code.")
+            valid = False
+        elif len(guess.getPinList()) != PIN_NUMBER:
+            print("The code provided is the wrong length.")
+            valid = False
+        if valid:
+            newClue = self.environment.code.getClue(guess)
+        return newClue
 
     def miniMax(self):
         return 0
