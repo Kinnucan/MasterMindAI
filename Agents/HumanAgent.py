@@ -36,12 +36,16 @@ class HumanAgent(Agent):
         self.guessCount = 0
         self.viableColors = self.COLOR_LIST
         self.testRound = 0  # changes how the agent plays (from gathering information to acting on that information)
+        self.won = False
 
     def createGuess(self):
         self.guessList = self.environment.getGuessList()
         self.clueList = self.environment.getClueList()
         # a temporary list used to narrow down color choices for a single guess
         clist = self.viableColors
+        # analyze the most recent clue, if there is one (empty clues count)
+        if self.guessCount > 0:
+            result = self.analyzeLatestClue()
         # first phase: keep guessing until you receive at least one clue in return
         if self.testRound == 0:
             color1, color2 = randomTwoColors(self.viableColors)
@@ -67,4 +71,28 @@ class HumanAgent(Agent):
                     # retrieve the clue given after the last round
                     lastClue = self.clueList[self.guessCount]
                     # TODO: Before continuing, test this out
+
+    def analyzeLatestClue(self):
+        clue = self.guessList[self.guessCount-1]
+        # check to see if the game has been won; if so, end the method
+        if clue.getBlackPegs() == 4:
+            self.won = True
+            return True
+        # if in phase 1...
+        if self.testRound == 0:
+            # if the guess got any feedback, move to phase 2
+            if clue.hasPegs():
+                self.testRound += 1
+            return True
+        # if in phase 2...
+        else:
+            if self.testRound == 1:
+                # automatically move to phase 3
+                self.testRound += 1
+                # give a different answer if there was any feedback versus no feedback
+                if clue.hasPegs():
+                    return True
+                else:
+                    return False
+
 
