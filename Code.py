@@ -69,6 +69,16 @@ class Code:
                 clist.append(pin.color)
         return clist
 
+    # given a list of acceptable colors, return a list of yet unused, viable colors for guessing
+    def getViableUnused(self, vlist):
+        clist = vlist.copy()
+        guessColors = self.getColors()
+        for color in guessColors:
+            if color in clist:
+                clist.remove(color)
+        return clist
+
+
     def cleanMatches(self):
         for pin in self.pinList:
             pin.unmatch()

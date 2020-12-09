@@ -32,47 +32,73 @@ class HumanAgent(Agent):
         self.environment = gameManager
         self.guessList = self.environment.getGuessList()
         self.clueList = self.environment.getClueList()
-        self.guess = []
+        self.guess = Code([])
         self.guessCount = 0
-        self.viableColors = self.COLOR_LIST
-        self.testRound = 0  # changes how the agent plays (from gathering information to acting on that information)
+        self.viableColors = self.COLOR_LIST.copy()
+        self.testRound = 1  # changes how the agent plays (from gathering information to acting on that information)
+        self.switchedFirstColor = False # keeps track of which color is switched out in phase 2
         self.won = False
 
     def createGuess(self):
         self.guessList = self.environment.getGuessList()
-        self.clueList = self.environment.getClueList()
-        # a temporary list used to narrow down color choices for a single guess
-        clist = self.viableColors.copy()
         # analyze the most recent clue, if there is one (empty clues count)
         if self.guessCount > 0:
             result = self.analyzeLatestClue()
+        # if the game has been won, end the program
+        if self.won:
+            print("Correct guess has been made!")
+        # a temporary list used to narrow down color choices for a single guess
+        clist = self.viableColors.copy()
         # first phase: keep guessing until you receive at least one clue in return
-        print("testRound is: " + str(self.testRound))
-        if self.testRound == 0:
-            color1, color2 = randomTwoColors(clist)
-            clist.remove(color1)
-            clist.remove(color2)
-            newGuess = Code([CodePin(color1), CodePin(color1), CodePin(color2), CodePin(color2)])
-        # second phase: switch out one color to see how it affects the given clue
-        else:
+        if self.testRound:
             if self.testRound == 1:
-                # at this point, any previous guesses will have only been made with two colors
+                print("Phase 1: Two random unused colors")
+                color1, color2 = randomTwoColors(clist)
+                newGuess = Code([CodePin(color1), CodePin(color1), CodePin(color2), CodePin(color2)])
+            # second phase: switch out one color to see how it affects the given clue
+            else:
                 prevColors = self.guess.getColors()
+                # choose one of the previous colors to reuse, and replace the other color with the new selection
                 prevColor1 = prevColors[0]
                 prevColor2 = prevColors[1]
-                clist.remove(prevColor1)
-                clist.remove(prevColor2)
+                # create a temporary list of acceptable colors
+                clist = self.guess.getViableUnused(clist)
                 # choose a new, as of yet unused color to insert into the guess
                 newColor = randomColor(clist)
-                # choose one of the previous colors to reuse, and replace the other color with the new selection
-                if random.randint(0, 1) == 0:
-                    newGuess = Code([CodePin(prevColor1), CodePin(prevColor1), CodePin(newColor), CodePin(newColor)])
-                else:
-                    newGuess = Code([CodePin(newColor), CodePin(newColor), CodePin(prevColor2), CodePin(prevColor2)])
-            else:
                 if self.testRound == 2:
-                    # retrieve the clue given after the last round
-                    lastClue = self.clueList[self.guessCount]
+                    print("Phase 2: Switch out one color randomly")
+                    if random.randint(0, 1) == 0:
+                        newGuess = Code([CodePin(prevColor1), CodePin(prevColor1),
+                                         CodePin(newColor), CodePin(newColor)])
+                    else:
+                        newGuess = Code([CodePin(newColor), CodePin(newColor),
+                                         CodePin(prevColor2), CodePin(prevColor2)])
+                        self.switchedFirstColor = True
+                else:
+                    if self.testRound == 3:
+                        print("Phase 3: Switch out one color depending on previous clue")
+                        # if any clue pins were received after the last round...
+                        if result:
+                            # switch out the newest color with an as of yet unused color
+                            if self.switchedFirstColor:
+                                newGuess = Code([CodePin(newColor), CodePin(newColor),
+                                                 CodePin(prevColor2), CodePin(prevColor2)])
+                            else:
+                                newGuess = Code([CodePin(prevColor1), CodePin(prevColor1),
+                                                 CodePin(newColor), CodePin(newColor)])
+                        # if not...
+                        else:
+                            # reinstate the color that had been switched out
+                            if self.switchedFirstColor:
+                                oldColor = self.guessList[self.guessCount-1].getColors()[0]
+                                newGuess = Code([CodePin(oldColor), CodePin(oldColor),
+                                                 CodePin(newColor), CodePin(newColor)])
+                            else:
+                                oldColor = self.guessList[self.guessCount - 1].getColors()[1]
+                                newGuess = Code([CodePin(newColor), CodePin(newColor),
+                                                 CodePin(oldColor), CodePin(oldColor)])
+        else:
+            pass
         # update the guess list
         self.guessList.append(newGuess)
         self.guess = newGuess
@@ -80,38 +106,58 @@ class HumanAgent(Agent):
         print("The agent's guess is: " + self.guess.__str__())
 
     def analyzeLatestClue(self):
-        clue = self.clueList[self.guessCount-1]
-
+        guess = self.guess
+        clue = self.clueList[self.guessCount]
+        print("Clue being analyzed for this round: " + clue.__str__())
         # check to see if the game has been won; if so, end the method
         if clue.getBlackPegs() == 4:
             self.won = True
             return True
         # if in phase 1...
-        if self.testRound == 0:
+        if self.testRound == 1:
             # if the guess got any feedback, move to phase 2
             if clue.hasPegs():
+                print("FIRST CLUE given! Moving to phase 2")
                 self.testRound += 1
+            # if no clue was given, neither color is present in the hidden code
+            # both can be removed from the list of viable colors
+            else:
+                for color in self.guess.getColors():
+                    print("Removing " + color + " from color list")
+                    self.viableColors.remove(color)
             return True
         # if in phase 2...
         else:
-            if self.testRound == 1:
+            if self.testRound == 2:
                 # automatically move to phase 3
                 self.testRound += 1
-                # give a different answer if there was any feedback versus no feedback
+                # return a different result based on whether any clue pins were given
                 if clue.hasPegs():
+                    print("Clue received in second phase HAS PEGS")
                     return True
-                else:
-                    return False
+                print("Clue received in second phase DOES NOT HAVE PEGS")
+                for color in self.guess.getColors():
+                    self.viableColors.remove(color)
+                return False
+            else:
+                if self.testRound == 3:
+                    # finish the third phase and move on to the next stage of the game
+                    print("Got to round 3")
 
     def go(self):
         self.environment.generateCode()
-        for i in range(2):
+        for i in range(3):
             self.makeGuess()
-        print("done!")
+        print("Done!")
 
     def makeGuess(self):
+        print("The true code is " + self.environment.getCode().__str__())
         self.createGuess()
         clue = self.environment.guessCode(self.guess)
         self.clueList.append(clue)
-        print("The clue list was " + clue.__str__())
-        print("The true code was " + self.environment.getCode().__str__())
+        print("The clue given was " + clue.__str__())
+        print("--------------------------")
+
+    def swapPins(self, firstPosition, secondPosition):
+        newGuess = self.guess
+        newGuess
