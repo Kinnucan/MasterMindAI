@@ -160,4 +160,7 @@ class HumanAgent(Agent):
 
     def swapPins(self, firstPosition, secondPosition):
         newGuess = self.guess
-        newGuess
+        pin1 = newGuess.getPin(firstPosition)
+        pin2 = newGuess.getPin(secondPosition)
+        newGuess.setPin(pin1, secondPosition)
+        newGuess.setPin(pin2, secondPosition)

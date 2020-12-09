@@ -62,6 +62,16 @@ class Code:
     def getPinList(self):
         return self.pinList
 
+    def getPin(self, position):
+        return self.pinList[position]
+
+    def setPin(self, pin, position):
+        self.pinList[position] = pin
+
+    def setPinColor(self, color, position):
+        newPin = CodePin(color)
+        self.pinList[position] = newPin
+
     def getColors(self):
         clist = []
         for pin in self.pinList:
