@@ -41,6 +41,8 @@ class HumanAgent(Agent):
 
     def createGuess(self):
         self.guessList = self.environment.getGuessList()
+        for code in self.guessList:
+            print(code.__str__())
         # analyze the most recent clue, if there is one (empty clues count)
         if self.guessCount > 0:
             result = self.analyzeLatestClue()
@@ -57,10 +59,7 @@ class HumanAgent(Agent):
                 newGuess = Code([CodePin(color1), CodePin(color1), CodePin(color2), CodePin(color2)])
             # second phase: switch out one color to see how it affects the given clue
             else:
-                prevColors = self.guess.getColors()
-                # choose one of the previous colors to reuse, and replace the other color with the new selection
-                prevColor1 = prevColors[0]
-                prevColor2 = prevColors[1]
+                newGuess = self.guess.copy()
                 # create a temporary list of acceptable colors
                 clist = self.guess.getViableUnused(clist)
                 # choose a new, as of yet unused color to insert into the guess
@@ -68,12 +67,12 @@ class HumanAgent(Agent):
                 if self.testRound == 2:
                     print("Phase 2: Switch out one color randomly")
                     if random.randint(0, 1) == 0:
-                        newGuess = Code([CodePin(prevColor1), CodePin(prevColor1),
-                                         CodePin(newColor), CodePin(newColor)])
-                    else:
-                        newGuess = Code([CodePin(newColor), CodePin(newColor),
-                                         CodePin(prevColor2), CodePin(prevColor2)])
+                        newGuess.setPinColor(newColor, 0)
+                        newGuess.setPinColor(newColor, 1)
                         self.switchedFirstColor = True
+                    else:
+                        newGuess.setPinColor(newColor, 2)
+                        newGuess.setPinColor(newColor, 3)
                 else:
                     if self.testRound == 3:
                         print("Phase 3: Switch out one color depending on previous clue")
@@ -81,22 +80,23 @@ class HumanAgent(Agent):
                         if result:
                             # switch out the newest color with an as of yet unused color
                             if self.switchedFirstColor:
-                                newGuess = Code([CodePin(newColor), CodePin(newColor),
-                                                 CodePin(prevColor2), CodePin(prevColor2)])
+                                newGuess.setPinColor(newColor, 0)
+                                newGuess.setPinColor(newColor, 1)
                             else:
-                                newGuess = Code([CodePin(prevColor1), CodePin(prevColor1),
-                                                 CodePin(newColor), CodePin(newColor)])
+                                newGuess.setPinColor(newColor, 2)
+                                newGuess.setPinColor(newColor, 3)
                         # if not...
                         else:
                             # reinstate the color that had been switched out
                             if self.switchedFirstColor:
-                                oldColor = self.guessList[self.guessCount-1].getColors()[0]
+                                oldColor = self.guessList[(self.guessCount-1)].getColors()[0]
                                 newGuess = Code([CodePin(oldColor), CodePin(oldColor),
                                                  CodePin(newColor), CodePin(newColor)])
                             else:
-                                oldColor = self.guessList[self.guessCount - 1].getColors()[1]
+                                oldColor = self.guessList[(self.guessCount-1)].getColors()[1]
                                 newGuess = Code([CodePin(newColor), CodePin(newColor),
                                                  CodePin(oldColor), CodePin(oldColor)])
+                        self.testRound = 0
         else:
             pass
         # update the guess list
@@ -146,7 +146,7 @@ class HumanAgent(Agent):
 
     def go(self):
         self.environment.generateCode()
-        for i in range(3):
+        while self.testRound:
             self.makeGuess()
         print("Done!")
 

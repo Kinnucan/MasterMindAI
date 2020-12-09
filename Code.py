@@ -88,6 +88,11 @@ class Code:
                 clist.remove(color)
         return clist
 
+    def copy(self):
+        newCode = Code([])
+        for i in range(4):
+            newCode.setPin(self.pinList[i], i)
+        return newCode
 
     def cleanMatches(self):
         for pin in self.pinList:
