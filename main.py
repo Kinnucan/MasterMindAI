@@ -35,22 +35,25 @@ def simpleAgentTests():
     you = Player(newGame)
     you.play()
 
+
 def betterAgentTests():
     newGame = GameManager()
     randy2 = RandomEligibleAgent(newGame, verbose=True)
     randy2.play()
 
+
 def humanAgentTests():
-    newGame = GameManager()
-    agent = HumanAgent(newGame)
-    agent.go()
+    winCounter = 0
+    for i in range(100):
+        newGame = GameManager()
+        agent = HumanAgent(newGame)
+        if agent.go():
+            winCounter += 1
+    print("Agent won " + str(winCounter) + " out of 100 times!")
 
 
 if __name__ == '__main__':
-    #environmentTests()
-    #simpleAgentTests()
-    #betterAgentTests()
+    # environmentTests()
+    # simpleAgentTests()
+    # betterAgentTests()
     humanAgentTests()
-
-
-
