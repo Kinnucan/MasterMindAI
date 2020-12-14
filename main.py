@@ -4,8 +4,9 @@ from CodePin import *
 from Code import *
 
 from Agents.RandomAgent import *
-from Agents.RandomEligibleAgent import *
 from Agents.HumanAgent import *
+from Agents.RandomEligibleAgent import *
+from Agents.Player import *
 
 
 def environmentTests():
@@ -31,7 +32,7 @@ def simpleAgentTests():
     randy.play()
     print("---------------------")
     newGame = GameManager()
-    you = HumanAgent(newGame)
+    you = Player(newGame)
     you.play()
 
 def betterAgentTests():
@@ -39,12 +40,17 @@ def betterAgentTests():
     randy2 = RandomEligibleAgent(newGame, verbose=True)
     randy2.play()
 
+def humanAgentTests():
+    newGame = GameManager()
+    agent = HumanAgent(newGame)
+    agent.go()
 
 
 if __name__ == '__main__':
     #environmentTests()
     #simpleAgentTests()
-    betterAgentTests()
+    #betterAgentTests()
+    humanAgentTests()
 
 
 
