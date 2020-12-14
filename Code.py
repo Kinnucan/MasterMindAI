@@ -70,15 +70,15 @@ class Code:
         self.pinList[position] = pin
 
     def setPinColor(self, color, position):
-        print("Setting pin " + str(position) + " to be " + color)
+        print("Setting pin " + str(position) + " to be " + str(color))
         newPin = CodePin(color)
         self.pinList[position] = newPin
 
     def swapPins(self, firstPosition, secondPosition):
         pin1 = self.getPin(firstPosition)
         pin2 = self.getPin(secondPosition)
-        if pin1.color == pin2.color:
-            pin2.setColor("")  # the empty string will stand in for any color the program knows is not in the code
+        # if pin1.color == pin2.color:
+        #     pin2.setColor("")  # the empty string will stand in for any color the program knows is not in the code
         self.setPin(pin1, secondPosition)
         self.setPin(pin2, firstPosition)
 

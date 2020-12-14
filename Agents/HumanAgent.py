@@ -383,9 +383,9 @@ class HumanAgent(Agent):
                     self.guess = self.findInfoGuessByPegs(blackPegsList, 1)
                     if (self.switchedFirstColor and not self.switchedBack) or \
                         (self.switchedBack and not self.switchedFirstColor):
-                        self.test(2, 3, False, self.guess, 1)
+                        self.test(2, 3, False, self.guess)
                     else:
-                        self.test(0, 1, False, self.guess, 1)
+                        self.test(0, 1, False, self.guess)
                     if self.won:
                         return
                     if minWhitePegs < 1:
@@ -396,13 +396,14 @@ class HumanAgent(Agent):
                     print("Min white pegs: 1")
                     # test out which pin would be in the correct position
                     self.guess = self.findInfoGuessByPegs(whitePegsList, 1)
+                    oldGuess = self.guess
                     self.guess.swapPins(0, 2)
                     self.guess.swapPins(1, 3)
                     if (self.switchedFirstColor and not self.switchedBack) or \
                        (self.switchedBack and not self.switchedFirstColor):
-                        self.test(0, 1, False, self.guess, 1)
+                        self.test(0, 1, True, oldGuess)
                     else:
-                        self.test(2, 3, False, self.guess, 1)
+                        self.test(2, 3, True, oldGuess)
                     if self.won or self.lost:
                         return
                     self.finalAnalysis()
@@ -454,9 +455,9 @@ class HumanAgent(Agent):
                             if len(colorList) == 1:
                                 self.guess = self.findInfoGuessByPegs(blackPegsList, 1)
                                 if self.switchedFirstColor:
-                                    self.test(0, 1, False, self.guess, 1)
+                                    self.test(0, 1, False, self.guess)
                                 else:
-                                    self.test(2, 3, False, self.guess, 1)
+                                    self.test(2, 3, False, self.guess)
                                 self.finalAnalysis()
                                 return
                             else:
@@ -466,9 +467,9 @@ class HumanAgent(Agent):
                                     clue = self.infoClueList[count]
                                     if guess != noBlackPegs:
                                         if self.switchedFirstColor:
-                                            self.test(0, 1, False, guess, 1)
+                                            self.test(0, 1, False, guess)
                                         else:
-                                            self.test(2, 3, False, guess, 1)
+                                            self.test(2, 3, False, guess)
                                 self.handleTwoUnknowns()
                                 return
         else:
@@ -634,6 +635,19 @@ class HumanAgent(Agent):
         print("Guess with " + str(pegNum) + " peg(s) found: " + newGuess.__str__())
         return newGuess
 
+    def findClueByGuess(self, guess):
+        self.guessList = self.environment.getGuessList()
+        self.clueList = self.environment.getClueList()
+        clue = []
+        count = 0
+        for item in self.guessList:
+            if item == guess:
+                clue = self.clueList[count]
+            count += 1
+        if not clue:
+            print("Given guess does not exist in records.")
+        return clue
+
     """Takes a color and index and sets that index in the code as confirmed to be the given color."""
 
     def setAsConfirmed(self, color, location):
@@ -654,31 +668,31 @@ class HumanAgent(Agent):
 
     """Takes two positions in the guess and returns which of the two pins is in the correct location."""
 
-    def test(self, position1, position2, checkWhitePegs=False, oldGuess=None, oldClue=None):
+    def test(self, position1, position2, checkWhitePegs=False, oldGuess=None):
         print("Testing pins at " + str(position1) + " and " + str(position2) + " in guess " + self.guess.__str__())
         # if a guess is given, a clue must also be given
         if oldGuess is not None:
-            if oldClue is None:
-                print("A clue must be provided with a guess when testing two pins.")
             self.guess = oldGuess
+        oldClue = self.findClueByGuess(self.guess)
+        if checkWhitePegs:
+            oldPegs = oldClue.getWhitePegs()
         else:
-            if checkWhitePegs:
-                oldClue = self.clueList[self.guessCount - 1].getWhitePegs()
-                print("Getting old clue from guess " + str(self.guessList[self.guessCount - 2]))
-            else:
-                oldClue = self.clueList[self.guessCount - 1].getBlackPegs()
-                print("Getting old clue from guess " + str(self.guessList[self.guessCount - 2]))
+            oldPegs = oldClue.getBlackPegs()
+        print("Getting old clue from this guess: " + self.guess.__str__())
         color = self.guess.getPin(position1).color
         self.guess.setPinColor("", position1)
         clue = self.makeGuess(self.guess, True)
         self.guess.setPinColor(color, position1)
         print("Resetting pin " + str(position1) + " to be " + str(color))
         # find the original guess's corresponding clue to compare with
-        newPegs = clue.getBlackPegs()
-        print("Old pegs: " + str(oldClue))
+        if checkWhitePegs:
+            newPegs = clue.getBlackPegs() - oldClue.getBlackPegs()
+        else:
+            newPegs = clue.getBlackPegs()
+        print("Old pegs: " + str(oldPegs))
         print("New pegs: " + str(newPegs))
         # if the new clue has as many black pegs as the old clue...
-        if newPegs >= oldClue:
+        if newPegs >= oldPegs:
             # this means that the pin that had NOT been tested is in the correct position
             self.setPinAsConfirmed(position2)
         # if not, this means that the pin that HAD been tested had already been in the correct position
@@ -693,7 +707,7 @@ class HumanAgent(Agent):
         color1 = self.guess.getPin(0).color
         color2 = self.guess.getPin(1).color
         self.guess.setPinColor("", 0)
-        clue = self.makeGuess(self.guess)
+        clue = self.makeGuess(self.guess, True)
         self.guess.setPinColor(color1, 0)
         if clue.getBlackPegs() == 3:
             for i in range(3):
@@ -702,7 +716,7 @@ class HumanAgent(Agent):
             return
         else:
             self.guess.setPinColor("", 1)
-            clue = self.makeGuess(self.guess)
+            clue = self.makeGuess(self.guess, True)
             self.guess.setPinColor(color2, 1)
             if clue.getBlackPegs() == 3:
                 self.setPinAsConfirmed(0)
@@ -711,6 +725,8 @@ class HumanAgent(Agent):
                 self.handleOneUnknown()
                 return
             else:
+                self.setPinAsConfirmed(0)
+                self.setPinAsConfirmed(1)
                 self.test(2, 3)
                 self.handleOneUnknown()
                 return
@@ -770,18 +786,6 @@ class HumanAgent(Agent):
                 self.guess.setPinColor(color, position)
                 self.makeGuess(self.guess)
         return True
-
-    # TODO: May be able to remove this method
-    """Returns a list of all of the guesses that belonged to the most recent test."""
-
-    def getTestGuesses(self):
-        self.guessList = self.environment.getGuessList()
-        testList = []
-        for guess in self.guessList:
-            if guess.checkIfTest():
-                testList.append(guess)
-                guess.removeAsTest()
-        return testList
 
     """Returns which positions (indices) in the code have not been confirmed yet."""
 

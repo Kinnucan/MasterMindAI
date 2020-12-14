@@ -15,7 +15,7 @@ class CodePin:
         if color in COLOR_LIST or color == "":  # accept blank strings for testing purposes
             self.color = color
         else:
-            print(color + " is not a valid color.")
+            print(str(color) + " is not a valid color.")
 
     def match(self):
         self.matched = True
