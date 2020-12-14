@@ -2,6 +2,7 @@
 import random
 from CodePin import *
 from Clue import *
+import time
 
 
 def makeCode(numList):
@@ -11,7 +12,7 @@ def makeCode(numList):
         return None
     colorList = []
     for i in numList:
-        if i-1 not in range(len(COLOR_NUMBER)):
+        if i-1 not in range(COLOR_NUMBER):
             return None
         colorList.append(COLOR_LIST[i-1])
     return Code([CodePin(col) for col in colorList])
@@ -67,35 +68,41 @@ class Code:
             pin.unmatch()
 
     def getClue(self, guess):
+        #start = time.time()
         output = Clue()
         # check every pin to see if there are any exact (i.e., black) matches
+        #start = time.time()
+        guessPinList = guess.getPinList()
         for i in range(PIN_NUMBER):
-            codePin = self.getPinList()[i]
-            guessPin = guess.getPinList()[i]
+            codePin = self.pinList[i]
+            guessPin = guessPinList[i]
             if codePin == guessPin:
                 # add a "black pin" to the clue to indicate a perfect match exists
                 output.augmentBlackPegs()
                 # denote the pins as having been matched
                 guessPin.match()
                 codePin.match()
+        #bpt = time.time()
+        #print("Black pegs time:", (bpt - start) * 1000, "ms")
         # check every pin in the hidden code to see if there are any inexact (i.e., white) matches
-        for codeInd in range(PIN_NUMBER):
-            codePin = self.getPinList()[codeInd]
+        for codePin in self.pinList:
             # run through all of the pins in the guess
-            for guessInd in range(PIN_NUMBER):
-                guessPin = guess.getPinList()[guessInd]
+            for guessPin in guessPinList:
                 # if the pin has been previously matched, skip over it. Otherwise, check it
                 if not (guessPin.matched or codePin.matched):
                     if codePin == guessPin:
-                        if codeInd != guessInd:
-                            # add a "white pin" to the clue list to indicate correct color, but wrong position
-                            output.augmentWhitePegs()
-                            # denote the pins as having been matched
-                            guessPin.match()
-                            codePin.match()
+                        # add a "white pin" to the clue list to indicate correct color, but wrong position
+                        output.augmentWhitePegs()
+                        # denote the pins as having been matched
+                        guessPin.match()
+                        codePin.match()
+                        break
+        # wpt = time.time()
+        # print("White pegs time:", (wpt - bpt) * 1000, "ms")
         # we don't need the matchings anymore
         guess.cleanMatches()
         self.cleanMatches()
+        # print("Comparing clues time:", (time.time()-wpt)*1000, "ms")
         return output
 
     # print out the colors of each of the pins in the code
