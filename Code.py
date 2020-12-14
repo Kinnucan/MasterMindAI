@@ -35,6 +35,7 @@ def generateAllCodes():
 class Code:
 
     def __init__(self, pinList):
+        self.isTest = False
         self.pinList = pinList # what will hold the code (order matters)
         # if given an empty list, create a random code
         if len(pinList) == 0:
@@ -69,8 +70,17 @@ class Code:
         self.pinList[position] = pin
 
     def setPinColor(self, color, position):
+        print("Setting pin " + str(position) + " to be " + color)
         newPin = CodePin(color)
         self.pinList[position] = newPin
+
+    def swapPins(self, firstPosition, secondPosition):
+        pin1 = self.getPin(firstPosition)
+        pin2 = self.getPin(secondPosition)
+        if pin1.color == pin2.color:
+            pin2.setColor("")  # the empty string will stand in for any color the program knows is not in the code
+        self.setPin(pin1, secondPosition)
+        self.setPin(pin2, firstPosition)
 
     def getColors(self):
         clist = []
@@ -88,6 +98,15 @@ class Code:
                 clist.remove(color)
         return clist
 
+    def setAsTest(self):
+        self.isTest = True
+
+    def removeAsTest(self):
+        self.isTest = False
+
+    def checkIfTest(self):
+        return self.isTest
+
     def copy(self):
         newCode = Code([])
         for i in range(4):
@@ -104,7 +123,7 @@ class Code:
         for i in range(PIN_NUMBER):
             codePin = self.getPinList()[i]
             guessPin = guess.getPinList()[i]
-            if codePin == guessPin:
+            if codePin.color == guessPin.color:
                 # add a "black pin" to the clue to indicate a perfect match exists
                 output.augmentBlackPegs()
                 # denote the pins as having been matched
@@ -118,7 +137,7 @@ class Code:
                 guessPin = guess.getPinList()[guessInd]
                 # if the pin has been previously matched, skip over it. Otherwise, check it
                 if not (guessPin.matched or codePin.matched):
-                    if codePin == guessPin:
+                    if codePin.color == guessPin.color:
                         if codeInd != guessInd:
                             # add a "white pin" to the clue list to indicate correct color, but wrong position
                             output.augmentWhitePegs()
@@ -134,7 +153,10 @@ class Code:
     def __str__(self):
         codeString = ""
         for pin in self.pinList:
-            codeString = codeString + pin.color + " "
+            if pin.color == "":
+                codeString = codeString + "null" + " "
+            else:
+                codeString = codeString + pin.color + " "
         return codeString
 
     def __eq__(self,other):

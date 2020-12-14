@@ -52,7 +52,7 @@ class HumanAgent(Agent):
         # variables relating to the algorithm's guesses
         self.guess = Code([])
         self.nextGuess = Code([])  # a variable that will hold one future guess if the program knows what it will be
-        self.futureGuesses = []  # a queue to hold multiple future guesses, in order
+        # self.futureGuesses = []  # a queue to hold multiple future guesses, in order
         self.guessCount = 0
 
         # variables keeping track of the use of colors in codes
@@ -97,16 +97,16 @@ class HumanAgent(Agent):
                 print("Correct guess has been made!")
             if self.testCompleted:
                 self.analyzeTest = True
-            # next, check to see if the program already knows what its next guess will be
-            if len(self.futureGuesses) > 0:
-                self.nextGuess = self.futureGuesses.pop([0])
-                print("set next guess to be " + self.nextGuess.__str__())
-            # if the game knows what its next guess will be, use that guess
-            if self.nextGuess is not []:
-                if len(self.futureGuesses) == 0:
-                    self.testCompleted = True
-                newGuess = self.nextGuess
-                self.nextGuess = []
+            # # next, check to see if the program already knows what its next guess will be
+            # if len(self.futureGuesses) > 0:
+            #     self.nextGuess = self.futureGuesses.pop([0])
+            #     print("set next guess to be " + self.nextGuess.__str__())
+            # # if the game knows what its next guess will be, use that guess
+            # if self.nextGuess is not []:
+            #     if len(self.futureGuesses) == 0:
+            #         self.testCompleted = True
+            #     newGuess = self.nextGuess
+            #     self.nextGuess = []
             else:
                 # if the game just finished testing out two pins, check the result
                 if self.analyzeTest:
@@ -143,8 +143,11 @@ class HumanAgent(Agent):
             result = self.analyzePhaseClue()
         clist = self.viableColors.copy()
         if self.won:
-            print("Correct guess has been made!")
-            pass
+            print("The game has been won!")
+            return
+        if self.lost:
+            print("The game has been lost.")
+            return
         if self.phaseRound == 1:
             print("Phase 1: Two random unused colors")
             color1, color2 = randomTwoColors(clist)
@@ -234,7 +237,7 @@ class HumanAgent(Agent):
         # check to see if the game has been won; if so, end the method
         if clue.getBlackPegs() == 4:
             self.won = True
-            return True
+            return
         # if no pins were received, none of the guessed colors are viable
         if not clue.hasPegs():
             for color in self.guess.getColors():
@@ -247,7 +250,7 @@ class HumanAgent(Agent):
                 # if the guess got any feedback, move to phase 2
                 if clue.hasPegs():
                     self.phaseRound += 1
-                return True
+                return
             # if in phase 2...
             else:
                 if self.phaseRound == 2:
@@ -318,28 +321,28 @@ class HumanAgent(Agent):
             # than once, the minimum number of black pegs applies to the reoccurring color
 
             # a near-win condition has been found
+            if maxWhitePegs == 4:
+                self.guess = self.findInfoGuessByPegs(whitePegsList, 4)
+                self.guess.swapPins(0, 2)
+                self.guess.swapPins(1, 3)
+                self.makeGuess(self.guess)
+                return
             if maxBlackPegs == 3:
                 print("Max black pegs: 3")
                 # access the guess that received three black pins
-                count = 0
-                for pegs in blackPegsList:
-                    if pegs == 3:
-                        self.guess = self.infoGuessList[count]
-                    count += 1
+                self.guess = self.findInfoGuessByPegs(blackPegsList, 3)
                 # finish the game by testing out which pin does not belong and swapping out colors for it
                 self.handleThreeBlack()
+                return
             if maxWhitePegs == 3:
                 print("Max white pegs: 3")
                 # access the guess that received three white pins
-                count = 0
-                for pegs in whitePegsList:
-                    if pegs == 3:
-                        self.guess = self.infoGuessList[count]
-                    count += 1
+                self.guess = self.findInfoGuessByPegs(whitePegsList, 3)
                 # swap around the pins
                 self.guess.swapPins(0, 2)
                 self.guess.swapPins(1, 3)
                 self.handleThreeBlack()
+                return
             else:
                 # the two consistent pins are in the correct position
                 if minBlackPegs == 2:  # minBlackPegs has a maximum value of 2 and a minimum value of 0 in this case
@@ -347,43 +350,250 @@ class HumanAgent(Agent):
                     if self.switchedFirstColor:
                         self.setAsConfirmed(self.consistentColor, 2)
                         self.setAsConfirmed(self.consistentColor, 3)
+                        self.handleTwoUnknowns(0, 1)
+                        return
                     else:
                         self.setAsConfirmed(self.consistentColor, 0)
                         self.setAsConfirmed(self.consistentColor, 1)
-                    self.twoSet = True  # two pins have been confirmed to be in the correct locations
+                        self.handleTwoUnknowns(2, 3)
+                        return
                 # the two consistent pins are in the code, but in the wrong position
                 if minWhitePegs == 2:
                     print("Min white pegs: 2")
                     if self.switchedFirstColor:
                         self.setAsConfirmed(self.consistentColor, 0)
                         self.setAsConfirmed(self.consistentColor, 1)
+                        self.handleTwoUnknowns(2, 3)
+                        return
                     else:
                         self.setAsConfirmed(self.consistentColor, 2)
                         self.setAsConfirmed(self.consistentColor, 3)
-                    self.twoSet = True
+                        self.handleTwoUnknowns(0, 1)
+                        return
                 # one of the consistent pins is in the correct position
                 if minBlackPegs == 1:
                     print("Min black pegs: 1")
                     # test out which pin is in the correct position
+                    self.guess = self.findInfoGuessByPegs(blackPegsList, 1)
                     if self.switchedFirstColor:
-                        self.test(2, 3)
+                        self.test(2, 3, False, self.guess, 1)
                     else:
-                        self.test(0, 1)
+                        self.test(0, 1, False, self.guess, 1)
+                    if self.won:
+                        return
+                    if minWhitePegs < 1:
+                        self.finalAnalysis()
+                        return
+                # one of the consistent pins is the correct color, but in the wrong position
                 if minWhitePegs == 1:
                     print("Min white pegs: 1")
                     # test out which pin would be in the correct position
+                    self.guess = self.findInfoGuessByPegs(whitePegsList, 1)
                     self.guess.swapPins(0, 2)
                     self.guess.swapPins(1, 3)
                     if self.switchedFirstColor:
-                        self.test(0, 1)
+                        self.test(0, 1, False, self.guess, 1)
                     else:
-                        self.test(2, 3)
-                if self.won:
+                        self.test(2, 3, False, self.guess, 1)
+                    if self.won or self.lost:
+                        return
+                    self.finalAnalysis()
                     return
                 else:
+                    # as the minimum number of black and white pegs was 0, these pegs apply to a swapped out color
                     if maxBlackPegs == 2:
-                        # TODO: handle two black pegs
-                        pass
+                        print("Max black pegs: 2")
+                        self.guess = self.findInfoGuessByPegs(blackPegsList, 2)
+                        if self.switchedFirstColor:
+                            self.setAsConfirmed(self.guess.getPin(0).color, 0)
+                            self.setAsConfirmed(self.guess.getPin(1).color, 1)
+                            self.handleTwoUnknowns(2, 3)
+                            return
+                        else:
+                            self.setAsConfirmed(self.guess.getPin(2).color, 2)
+                            self.setAsConfirmed(self.guess.getPin(3).color, 3)
+                            self.handleTwoUnknowns(0, 1)
+                            return
+                    else:
+                        # same here: these white pegs must apply to a swapped out color by process of elimination
+                        if maxWhitePegs == 2:
+                            print("Max white pegs: 2")
+                            self.guess = self.findInfoGuessByPegs(whitePegsList, 2)
+                            if self.switchedFirstColor:
+                                self.setAsConfirmed(self.guess.getPin(0).color, 2)
+                                self.setAsConfirmed(self.guess.getPin(1).color, 3)
+                                self.handleTwoUnknowns(2, 3)
+                                return
+                            else:
+                                self.setAsConfirmed(self.guess.getPin(2).color, 0)
+                                self.setAsConfirmed(self.guess.getPin(3).color, 1)
+                                self.handleTwoUnknowns(0, 1)
+                                return
+                        else:
+                            # there will either be two clues with one black peg, or two clues with one white peg
+                            # now we will figure out which is which (or if both are true)
+                            print("Looking at worst-case scenario...")
+                            colorList = []
+                            count = 0
+                            for pegs in blackPegsList:
+                                if pegs == 1:
+                                    if self.switchedFirstColor:
+                                        colorList.append(self.infoGuessList[count].getPin(0).color)
+                                    else:
+                                        colorList.append(self.infoGuessList[count].getPin(2).color)
+                                count += 1
+                            if len(colorList) == 1:
+                                self.guess = self.findInfoGuessByPegs(blackPegsList, 1)
+                                if self.switchedFirstColor:
+                                    self.test(0, 1, False, self.guess, 1)
+                                else:
+                                    self.test(2, 3, False, self.guess, 1)
+                                self.finalAnalysis()
+                                return
+                            else:
+                                noBlackPegs = self.findInfoGuessByPegs(blackPegsList, 0)
+                                count = 0
+                                for guess in self.infoGuessList:
+                                    clue = self.infoClueList[count]
+                                    if guess != noBlackPegs:
+                                        if self.switchedFirstColor:
+                                            self.test(0, 1, False, guess, 1)
+                                        else:
+                                            self.test(2, 3, False, guess, 1)
+                                pos1 = self.getUnconfirmedPositions()[0]
+                                pos2 = self.getUnconfirmedPositions()[1]
+                                self.handleTwoUnknowns(pos1, pos2)
+                                return
+
+    """Finishes up the game if it hasn't been finished already. This method is called when one pin location has been
+    determined, and it uses information from the first three phases of the game to find the location of a second pin
+    and begin wrapping up the guessing process from there."""
+
+    def finalAnalysis(self):
+        print("Entering final analysis stage.")
+        unconfirmed = self.getUnconfirmedPositions()
+        # reroute finalAnalysis in case there are less than three unknown pins in the code
+        if len(unconfirmed) == 2:
+            self.handleTwoUnknowns(unconfirmed[0], unconfirmed[1])
+            return
+        if len(unconfirmed) == 1:
+            self.handleOneUnknown()
+            return
+        # handle three unknowns
+        confirmedPos = self.getConfirmedPositions()[0]
+        # a list of the two positions that will be assigned color1 as a color
+        posList = []
+        receivedPegs = False
+        while not receivedPegs:
+            # take two random colors; one will be put in two available positions, one in one available position
+            color1, color2 = randomTwoColors(self.viableColors)
+            print("Testing " + color1 + " and " + color2 + " as colors.")
+            for i in range(4):
+                if i != confirmedPos:
+                    self.guess.setPinColor(color1, i)
+            # set the remaining color to be either in the last position or second-to-last position
+            if confirmedPos != 3:
+                self.guess.setPinColor(color2, 3)
+                # denote positions for color1
+                for i in range(3):
+                    if i != confirmedPos:
+                        posList.append(i)
+            else:
+                self.guess.setPinColor(color2, 2)
+                # the positions of color1 are confirmed to be at 0 and 1 in this situation
+                posList.append(0)
+                posList.append(1)
+            clue = self.makeGuess(self.guess)
+            wp = clue.getWhitePegs()
+            bp = clue.getBlackPegs()
+            # if any pegs were received in response to the new colors...
+            if wp != 0 or bp > 1:
+                receivedPegs = True
+                print("Pegs received. Moving on.")
+            # if not, remove them as guessing options from now
+            else:
+                self.viableColors.remove(color1)
+                self.viableColors.remove(color2)
+        # this means that two of the new colors are in the right place
+        if clue.getBlackPegs() == 3:
+            print("Three black pegs in final analysis.")
+            self.handleThreeBlack()
+            return
+        else:
+            # this means that one of the new colors is in the right place.
+            # swap out the color2 slot with a new color. If that pin had been
+            # in the correct location, the resulting clue will have
+            # just one black peg. If not, test both color1 slots against
+            # one another.
+            if clue.getBlackPegs() == 2:
+                print("Two black pegs in final analysis.")
+                if confirmedPos != 3:
+                    # reassign clue
+                    self.guess.setPinColor("", 3)
+                    clue = self.makeGuess(self.guess)
+                    if clue.getBlackPegs() == 1:
+                        self.setAsConfirmed(color2, 3)
+                        self.handleTwoUnknowns(posList[0], posList[1])
+                        return
+                    else:
+                        self.test(posList[0], posList[1])
+                        self.handleTwoUnknowns(self.getUnconfirmedPositions()[0], self.getUnconfirmedPositions()[1])
+                        return
+            else:
+                # this means that both added colors are in the code:
+                # move color1 into the color2 slot, move color2 into both color1 slots,
+                # and then test which one is in the right location and call
+                # handleOneUnknown afterwards.
+                if clue.getWhitePegs() == 2:
+                    print("Two white pegs in final analysis.")
+                    # set the color2 slot as confirmed to be color1
+                    if confirmedPos == 3:
+                        self.setAsConfirmed(color1, 2)
+                    else:
+                        self.setAsConfirmed(color1, 3)
+                    self.test(posList[0], posList[1])
+                    self.handleOneUnknown()
+                    pass
+                # this means that one added color is in the code:
+                # move color1 into the color2 slot and make a guess.
+                # if that receives 0 white pegs, move color2 into both
+                # color1 slots and test which one is the right slot for
+                # color2. Then call handleTwoUnknowns afterwards.
+                if clue.getWhitePegs() == 1:
+                    print("One white peg in final analysis.")
+                    # switch the color2 slot to be color1
+                    if confirmedPos == 3:
+                        self.guess.setPinColor(color1, 2)
+                    else:
+                        self.guess.setPinColor(color1, 3)
+                    clue = self.makeGuess(self.guess)
+                    if clue.getWhitePegs() == 1:
+                        self.test(posList[0], posList[1])
+                    else:
+                        # it should receive 0 white pegs otherwise
+                        self.guess.setPinColor(color2, posList[0])
+                        self.guess.setPinColor(color2, posList[1])
+                    pass
+
+
+    def reduceViableColors(self):
+        # use this space to reduce viableColors by:
+        # looking at what codes have no black pins
+        # looking at what codes have no white pins
+        # finding any common colors between them
+        # checking to make sure the color has not been moved
+        # removing the color from self.viableColors
+        pass
+
+    def findInfoGuessByPegs(self, pegsList, pegNum):
+        newGuess = Clue([])
+        count = 0
+        for pegs in pegsList:
+            if pegs == pegNum:
+                newGuess = self.infoGuessList[count]
+            count += 1
+        print("Guess with " + str(pegNum) + " peg(s) found: " + newGuess.__str__())
+        return newGuess
 
     """Takes a color and index and sets that index in the code as confirmed to be the given color."""
 
@@ -405,19 +615,32 @@ class HumanAgent(Agent):
 
     """Takes two positions in the guess and returns which of the two pins is in the correct location."""
 
-    def test(self, position1, position2):
-        print("Testing pins at " + str(position1) + " and " + str(position2))
+    def test(self, position1, position2, checkWhitePegs=False, oldGuess=None, oldPegs=None):
+        print("Testing pins at " + str(position1) + " and " + str(position2) + " in guess " + self.guess.__str__())
+        # if a guess is given, a clue must also be given
+        if oldGuess is not None:
+            if oldPegs is None:
+                print("A clue must be provided with a guess when testing two pins.")
+            self.guess = oldGuess
+        else:
+            if checkWhitePegs:
+                oldPegs = self.clueList[self.guessCount - 2].getWhitePegs()
+            else:
+                oldPegs = self.clueList[self.guessCount - 2].getBlackPegs()
         color = self.guess.getPin(position1).color
         self.guess.setPinColor("", position1)
-        clue = self.makeGuess(self.guess)
-        if self.won:
-            return
+        clue = self.makeGuess(self.guess, True)
+        self.guess.setPinColor(color, position1)
+        print("Resetting pin " + str(position1) + " to be " + str(color))
         # find the original guess's corresponding clue to compare with
-        oldPegs = self.clueList[self.guessCount - 2].getBlackPegs()
+        if checkWhitePegs:
+            newPegs = clue.getWhitePegs()
+        else:
+            newPegs = clue.getBlackPegs()
         print("Old pegs: " + str(oldPegs))
-        print("New pegs: " + str(clue.getBlackPegs()))
+        print("New pegs: " + str(newPegs))
         # if the new clue has as many black pegs as the old clue...
-        if clue.getBlackPegs() >= oldPegs:
+        if newPegs >= oldPegs:
             # this means that the pin that had NOT been tested is in the correct position
             self.setPinAsConfirmed(position2)
         # if not, this means that the pin that HAD been tested had already been in the correct position
@@ -438,23 +661,50 @@ class HumanAgent(Agent):
             self.setPinAsConfirmed(2)
             self.setPinAsConfirmed(3)
             self.test(0, 1)
-            index = self.availablePositions()[0]
-            print("Unknown: " + str(index))
+            self.handleOneUnknown()
         else:
             self.setAsConfirmed(color1, 0)
             self.setAsConfirmed(color2, 0)
             self.test(2, 3)
-            index = self.availablePositions()[0]
-            print("Unknown: " + str(index))
+            self.handleOneUnknown()
 
     """Handles any situation where the most recent guess made had two pins set in the correct location."""
 
     def handleTwoUnknowns(self, position1, position2):
-        pass
+        print("Handling two unknowns...")
+        receivedPins = False
+        while not receivedPins:
+            color1, color2 = randomTwoColors(self.viableColors)
+            self.guess.setPinColor(color1, position1)
+            self.guess.setPinColor(color2, position2)
+            clue = self.makeGuess(self.guess)
+            wp = clue.getWhitePegs()
+            bp = clue.getBlackPegs()
+            if wp != 0 or bp > 2:
+                receivedPins = True
+            else:
+                self.viableColors.remove(color1)
+                self.viableColors.remove(color2)
+        # once some pins have been received...
+        if bp == 3:
+            self.test(position1, position2)
+            self.handleOneUnknown()
+        else:
+            if wp == 2:
+                self.setAsConfirmed(color2, position1)
+                self.setAsConfirmed(color1, position2)
+                self.makeGuess(self.guess)
+                return
+            else:
+                if wp == 1:
+                    self.guess.swapPins(position1, position2)
+                    self.test(position1, position2)
+                    return
 
     """Handles any situation where there is only one incorrect pin, and its location is known."""
 
-    def handleOneUnknown(self, position):
+    def handleOneUnknown(self):
+        position = self.getUnconfirmedPositions()[0]
         clist = self.viableColors.copy()
         # remove as an option any colors that have been guessed and proven incorrect
         for guess in self.guessList:
@@ -464,9 +714,10 @@ class HumanAgent(Agent):
                     if guess.getPin(i).color != self.guess.getPin(i).color:
                         sameCode = False
             if sameCode:
-                clist.remove(guess.getPin(position).color)
+                if guess.getPin(position).color in clist:
+                    clist.remove(guess.getPin(position).color)
         for color in clist:
-            if not self.won:
+            if not self.won and not self.lost:
                 self.guess.setPinColor(color, position)
                 self.makeGuess(self.guess)
         print("***Correct guess has been made!***")
@@ -486,7 +737,7 @@ class HumanAgent(Agent):
 
     """Returns which positions (indices) in the code have not been confirmed yet."""
 
-    def availablePositions(self):
+    def getUnconfirmedPositions(self):
         indexList = []
         count = 0
         for item in self.confirmedColors:
@@ -495,15 +746,26 @@ class HumanAgent(Agent):
             count += 1
         return indexList
 
+    def getConfirmedPositions(self):
+        available = self.getUnconfirmedPositions()
+        unavailable = []
+        for i in range(4):
+            if i not in available:
+                unavailable.append(i)
+        return unavailable
+
     """"Calls the game manager to figure out the corresponding code for the given guess"""
 
-    def makeGuess(self, guess=None):
+    def makeGuess(self, guess=None, testing=False):
         if self.guessCount > self.MAX_GUESSES:
-            print("---Ran out of guesses! Following guesses exceed maximum amount allowed---")
-        # make sure that all confirmed colors are set correctly
-        for i in range(4):
-            if self.confirmedColors[i] != "":
-                self.guess.setPinColor(self.confirmedColors[i], i)
+            print("---Ran out of guesses!---")
+            self.lost = True
+            return
+        if not testing:
+            # make sure that all confirmed colors are set correctly
+            for i in range(4):
+                if self.confirmedColors[i] != "":
+                    self.guess.setPinColor(self.confirmedColors[i], i)
         print("The AGENT'S GUESS is: " + self.guess.__str__())
         print("The TRUE CODE is " + self.environment.getCode().__str__())
         if guess is not None:
@@ -525,7 +787,8 @@ class HumanAgent(Agent):
 
     def go(self):
         self.environment.generateCode()
-        for i in range(5):
+        while not self.won and not self.lost:
             self.createGuess()
-            self.makeGuess()
+            if not self.won and not self.lost:
+                self.makeGuess()
         print("Done!")
