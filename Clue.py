@@ -3,9 +3,14 @@ from CodePin import *
 
 
 class Clue:
-    def __init__(self, blackPegs = 0, whitePegs = 0):
+    def __init__(self, blackPegs=0, whitePegs=0):
         self.blackPegs = blackPegs
         self.whitePegs = whitePegs
+
+    def hasPegs(self):
+        if self.blackPegs == 0 and self.whitePegs == 0:
+            return False
+        return True
 
     def getBlackPegs(self):
         return self.blackPegs
@@ -14,10 +19,10 @@ class Clue:
         return self.whitePegs
 
     def augmentBlackPegs(self):
-        self.blackPegs+=1
+        self.blackPegs += 1
 
     def augmentWhitePegs(self):
-        self.whitePegs+=1
+        self.whitePegs += 1
 
     def isWinning(self):
         return self.blackPegs >= PIN_NUMBER

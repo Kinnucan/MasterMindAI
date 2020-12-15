@@ -4,9 +4,10 @@ from CodePin import *
 from Code import *
 
 from Agents.RandomAgent import *
-from Agents.RandomEligibleAgent import *
 from Agents.HumanAgent import *
 from Agents.Knuth import *
+from Agents.RandomEligibleAgent import *
+from Agents.Player import *
 
 
 def environmentTests():
@@ -32,7 +33,7 @@ def simpleAgentTests():
     randy.play()
     print("---------------------")
     newGame = GameManager()
-    you = HumanAgent(newGame)
+    you = Player(newGame)
     you.play()
 
 def betterAgentTests():
@@ -45,11 +46,19 @@ def knuthAgentTest():
     knuth = Knuth(newGame)
     knuth.play()
 
+def humanAgentTests():
+    winCounter = 0
+    for i in range(100):
+        newGame = GameManager()
+        agent = HumanAgent(newGame)
+        if agent.go():
+            winCounter += 1
+    print("Agent won " + str(winCounter) + " out of 100 times!")
+
 
 if __name__ == '__main__':
-    #environmentTests()
-    #simpleAgentTests()
+    # environmentTests()
+    # simpleAgentTests()
     # betterAgentTests()
+    # humanAgentTests()
     knuthAgentTest()
-
-
