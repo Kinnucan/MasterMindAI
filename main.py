@@ -6,6 +6,7 @@ from Code import *
 from Agents.RandomAgent import *
 from Agents.RandomEligibleAgent import *
 from Agents.HumanAgent import *
+from Agents.Knuth import *
 
 
 def environmentTests():
@@ -39,12 +40,16 @@ def betterAgentTests():
     randy2 = RandomEligibleAgent(newGame, verbose=True)
     randy2.play()
 
+def knuthAgentTest():
+    newGame = GameManager()
+    knuth = Knuth(newGame)
+    knuth.play()
 
 
 if __name__ == '__main__':
     #environmentTests()
     #simpleAgentTests()
-    betterAgentTests()
-
+    # betterAgentTests()
+    knuthAgentTest()
 
 

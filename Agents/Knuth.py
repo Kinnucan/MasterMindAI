@@ -1,8 +1,5 @@
 from Agent import *
-from GameManager import *
-from CodePin import *
 from Code import *
-from itertools import permutations
 from Clue import *
 
 
@@ -28,42 +25,34 @@ class Knuth:
                     permutation[2] = CodePin(c)
                     for d in colors:
                         permutation[3] = CodePin(d)
-                        setOfCodes.append(permutation)
+                        code = permutation.copy()
+                        setOfCodes.append(code)
         return setOfCodes
 
     # Removes a previously guessed code
     def removeGuessedCodes(self, codes, code):
-        for i in range(len(codes)):
-            if (Code(codes[i]).getPinList() == code.getPinList()):
+        for i in codes:
+            if (Code(i).getPinList() == code.getPinList()):
                 codes.remove(i)
+                break
 
     # Creates a guess using Minimax scoring
-    def createGuess(self, blackPegs, whitePegs):
-        self.removeBadCodes(blackPegs, whitePegs)
+    def createGuess(self, blackPegs, whitePegs, currGuess):
+        self.removeBadCodes(blackPegs, whitePegs, currGuess)
         nextGuesses = self.miniMax()
         guess = self.getNextGuess(nextGuesses)
-        return guess
+        return Code(guess)
 
-    # Removes codes that wouldn't give the same number of black and white pegs
-    def removeBadCodes(self, blackPegs, whitePegs):
+    # For every code in candidateCodes, if it were the hidden code and did not give the same
+    # number of black and white pegs in response to the current guess, then remove that code
+    # from candidateCodes
+    def removeBadCodes(self, blackPegs, whitePegs, currGuess):
+        newCandidateCodes = []
         for i in self.candidateCodes:
-            response = self.processGuess(Code(i))
-            if (response.whitePegs != whitePegs or response.blackPegs != blackPegs):
-                self.candidateCodes.remove(i)
-
-    # Processes a guess and returns the number of black and white pegs as a Clue object
-    def processGuess(self, guess):
-        newClue = Clue()
-        valid = True
-        if str(type(guess)) != "<class 'Code.Code'>":
-            print("The object provided is not a valid code.")
-            valid = False
-        elif len(guess.getPinList()) != PIN_NUMBER:
-            print("The code provided is the wrong length.")
-            valid = False
-        if valid:
-            newClue = self.environment.code.getClue(guess)
-        return newClue
+            response = Code(i).getClue(currGuess)
+            if response.getWhitePegs() == whitePegs and response.getBlackPegs() == blackPegs:
+                newCandidateCodes.append(i)
+        self.candidateCodes = newCandidateCodes.copy()
 
     # Implements the miniMax scoring algorithm
     def miniMax(self):
@@ -72,19 +61,23 @@ class Knuth:
         nextGuesses = []
         for i in range(len(self.allCodes)):
             for j in range(len(self.candidateCodes)):
-                currCode = self.allCodes[i]
-                pegScore = currCode.getClue(self.candidateCodes[j])
-                if (scoreCount[pegScore] > 0):
-                    scoreCount[pegScore] += 1
+                currCode = Code(self.allCodes[i])
+                pegs = currCode.getClue(Code(self.candidateCodes[j]))
+                blackPegs = str(pegs.getBlackPegs())
+                whitePegs = str(pegs.getWhitePegs())
+                pegScore = blackPegs + whitePegs
+                if (pegScore in scoreCount.keys()):
+                    if (scoreCount[pegScore] > 0):
+                        scoreCount[pegScore] += 1
                 else:
                     scoreCount[pegScore] = 1
             max = self.getMaxScore(scoreCount)
-            score[self.allCodes[i]] = max
+            score[self.convertCode(self.allCodes[i])] = max
             scoreCount.clear()
         min = self.getMinScore(score)
-        for code, val in score:
-            if (val == min):
-                nextGuesses.append(code)
+        for item in score.items():
+            if (item[1] == min):
+                nextGuesses.append(item[0])
         return nextGuesses
 
     # Gets the maximum score from the dictionary
@@ -106,35 +99,70 @@ class Knuth:
     # Gets the next guess from the list of possible next guesses, using one from candidateCodes whenever possible
     def getNextGuess(self, nextGuesses):
         for guess in nextGuesses:
-            if (guess in self.candidateCodes):
-                return guess
+            currGuess = self.convertCode(guess)
+            if (currGuess in self.candidateCodes):
+                return currGuess
         for guess in nextGuesses:
-            if (guess in self.allCodes):
-                return guess
+            currGuess = self.convertCode(guess)
+            if (currGuess in self.allCodes):
+                return currGuess
+
+    # Converts codes from list of CodePins to a string and vice versa
+    def convertCode(self, code):
+        if type(code[0]) == CodePin:
+            codeSequence = ""
+            for i in range(len(code)):
+                codeSequence += code[i].getColor()
+                codeSequence += " "
+            return codeSequence
+        elif type(code == str):
+            pins = code.split()
+            codeSequence = []
+            for i in range(len(pins)):
+                codeSequence.append(CodePin(pins[i]))
+            return codeSequence
 
     # Runs the algorithm until the game is won
     def play(self):
-        initialGuess = Code([CodePin("red"), CodePin("red"), CodePin("orange"), CodePin("orange")])
-        self.removeGuessedCodes(self.candidateCodes, initialGuess)
-        self.removeGuessedCodes(self.allCodes, initialGuess)
-        initialResponse = self.environment.guessCode(initialGuess)
+        # currGuess = Code([CodePin("red"), CodePin("red"), CodePin("orange"), CodePin("orange")])
+        # self.removeGuessedCodes(self.candidateCodes, currGuess)
+        # self.removeGuessedCodes(self.allCodes, currGuess)
+        # currResponse = self.environment.guessCode(currGuess)
+        # if self.verbose:
+        #     print("Guess:", currGuess, "Response:", currResponse)
+        #
+        # if (currResponse.isWinning()):
+        #     print("Won in", self.environment.getGuessNumber(), "guesses!")
+        # else:
+        #     blackPegs = currResponse.getBlackPegs()
+        #     whitePegs = currResponse.getWhitePegs()
+        #     while True:
+        #         currGuess = self.createGuess(blackPegs, whitePegs, currGuess)
+        #         self.removeGuessedCodes(self.candidateCodes, currGuess)
+        #         self.removeGuessedCodes(self.allCodes, currGuess)
+        #         currResponse = self.environment.guessCode(currGuess)
+        #         if self.verbose:
+        #             print("Guess:", currGuess, "Response:", currResponse)
+        #         if currResponse.isWinning():
+        #             if self.verbose:
+        #                 print("Won in", self.environment.getGuessNumber(), "guesses!")
+        #             break
+        #         blackPegs = currResponse.getBlackPegs()
+        #         whitePegs = currResponse.getWhitePegs()
+        #     return self.environment.getGuessNumber()
 
-        if (initialResponse.isWinning()):
-            print("Won in", self.environment.getGuessNumber(), "guesses!")
-        else:
-            blackPegs = initialResponse.getBlackPegs()
-            whitePegs = initialResponse.getWhitePegs()
-            while True:
-                newGuess = self.createGuess(blackPegs, whitePegs)
-                self.removeGuessedCodes(self.candidateCodes, newGuess)
-                self.removeGuessedCodes(self.allCodes, newGuess)
-                newResponse = self.environment.guessCode(newGuess)
+        currGuess = Code([CodePin("red"), CodePin("red"), CodePin("orange"), CodePin("orange")])
+        while True:
+            self.removeGuessedCodes(self.candidateCodes, currGuess)
+            self.removeGuessedCodes(self.allCodes, currGuess)
+            currResponse = self.environment.guessCode(currGuess)
+            if self.verbose:
+                print("Guess:", currGuess, "Response:", currResponse)
+            if currResponse.isWinning():
                 if self.verbose:
-                    print("Guess:", newGuess, "Response:", newResponse)
-                if newResponse.isWinning():
-                    if self.verbose:
-                        print("Won in", self.environment.getGuessNumber(), "guesses!")
-                    break
-                blackPegs = newResponse.getBlackPegs()
-                whitePegs = newResponse.getWhitePegs()
-            return self.environment.getGuessNumber()
+                    print("Won in", self.environment.getGuessNumber(), "guesses!")
+                break
+            blackPegs = currResponse.getBlackPegs()
+            whitePegs = currResponse.getWhitePegs()
+            currGuess = self.createGuess(blackPegs, whitePegs, currGuess)
+        return self.environment.getGuessNumber()
