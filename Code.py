@@ -11,7 +11,7 @@ def makeCode(numList):
         return None
     colorList = []
     for i in numList:
-        if i-1 not in range(len(COLOR_NUMBER)):
+        if i-1 not in range(COLOR_NUMBER):
             return None
         colorList.append(COLOR_LIST[i-1])
     return Code([CodePin(col) for col in colorList])
@@ -119,9 +119,10 @@ class Code:
     def getClue(self, guess):
         output = Clue()
         # check every pin to see if there are any exact (i.e., black) matches
+        guessPinList = guess.pinList
         for i in range(PIN_NUMBER):
-            codePin = self.getPinList()[i]
-            guessPin = guess.getPinList()[i]
+            codePin = self.pinList[i]
+            guessPin = guessPinList[i]
             if codePin.color == guessPin.color:
                 # add a "black pin" to the clue to indicate a perfect match exists
                 output.augmentBlackPegs()
@@ -129,20 +130,18 @@ class Code:
                 guessPin.match()
                 codePin.match()
         # check every pin in the hidden code to see if there are any inexact (i.e., white) matches
-        for codeInd in range(PIN_NUMBER):
-            codePin = self.getPinList()[codeInd]
+        for codePin in self.pinList:
             # run through all of the pins in the guess
-            for guessInd in range(PIN_NUMBER):
-                guessPin = guess.getPinList()[guessInd]
+            for guessPin in guessPinList:
                 # if the pin has been previously matched, skip over it. Otherwise, check it
                 if not (guessPin.matched or codePin.matched):
                     if codePin.color == guessPin.color:
-                        if codeInd != guessInd:
-                            # add a "white pin" to the clue list to indicate correct color, but wrong position
-                            output.augmentWhitePegs()
-                            # denote the pins as having been matched
-                            guessPin.match()
-                            codePin.match()
+                        # add a "white pin" to the clue list to indicate correct color, but wrong position
+                        output.augmentWhitePegs()
+                        # denote the pins as having been matched
+                        guessPin.match()
+                        codePin.match()
+                        break
         # we don't need the matchings anymore
         guess.cleanMatches()
         self.cleanMatches()
