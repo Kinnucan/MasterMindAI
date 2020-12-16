@@ -7,7 +7,7 @@ from Agents.RandomAgent import *
 from Agents.HumanAgent import *
 from Agents.RandomEligibleAgent import *
 from Agents.Player import *
-
+from Agents.GeneticAlgorithmAgent import *
 
 def environmentTests():
     testCode = Code([])
@@ -38,8 +38,11 @@ def simpleAgentTests():
 
 def betterAgentTests():
     newGame = GameManager()
-    randy2 = RandomEligibleAgent(newGame, verbose=True)
-    randy2.play()
+    # randy2 = RandomEligibleAgent(newGame, verbose=True)
+    # randy2.play()
+    genny = GeneticAlgorithmAgent(newGame, verbose=True, firstGuess=makeCode([1,1,2,3]), EHatChoiceMethod="random",maxGen=50)
+    genny.play()
+
 
 
 def humanAgentTests():
@@ -55,5 +58,5 @@ def humanAgentTests():
 if __name__ == '__main__':
     # environmentTests()
     # simpleAgentTests()
-    # betterAgentTests()
-    humanAgentTests()
+    betterAgentTests()
+    # humanAgentTests()

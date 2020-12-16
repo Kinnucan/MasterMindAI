@@ -2,6 +2,15 @@ from GameManager import *
 from CodePin import *
 from Code import *
 
+
+def isConsistent(guess, prevGuesses, prevClues):
+    # checks if a guess is consistent with the evidence
+    for i in range(len(prevGuesses)):
+        if guess.getClue(prevGuesses[i]) != prevClues[i]:
+            return False
+    return True
+
+
 class Agent:
     #an abstract class for making agents
     def __init__(self, gameManager, verbose=False, seeCode=False):
@@ -31,13 +40,6 @@ class Agent:
     # some helper function(s) for agents
     # ============================================
     def isConsistent(self, guess):
-        #checks if a guess is consistent with the evidence
-        prevGuesses = self.environment.getGuessList()
-        prevClues = self.environment.getClueList()
-        for i in range(self.environment.getGuessNumber()):
-            if guess.getClue(prevGuesses[i]) != prevClues[i]:
-                return False
-        return True
-
+        return isConsistent(guess, self.environment.getGuessList(), self.environment.getClueList())
 
 
