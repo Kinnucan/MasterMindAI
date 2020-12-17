@@ -3,36 +3,20 @@ from Code import *
 from Clue import *
 
 
-class Knuth:
+class Knuth(Agent):
     # Implements the 5-guess algorithm designed by Donald Knuth
 
-    def __init__(self, gameManager):
-        self.candidateCodes = self.generateCodes()
+    def __init__(self, gameManager, verbose=False, firstGuess = makeCode([1,1,2,2])):
+        self.candidateCodes = generateAllCodes()
         self.allCodes = self.candidateCodes.copy()
-        Agent.__init__(self, gameManager, verbose=True, seeCode=False)
+        self.firstGuess = firstGuess
+        Agent.__init__(self, gameManager, verbose=verbose, seeCode=False)
 
-    # Generates the set of all possible codes
-    def generateCodes(self):
-        colors = ["red", "orange", "yellow", "green", "blue", "purple"]
-        setOfCodes = []
-        permutation = [None, None, None, None]
-
-        for a in colors:
-            permutation[0] = CodePin(a)
-            for b in colors:
-                permutation[1] = CodePin(b)
-                for c in colors:
-                    permutation[2] = CodePin(c)
-                    for d in colors:
-                        permutation[3] = CodePin(d)
-                        code = permutation.copy()
-                        setOfCodes.append(code)
-        return setOfCodes
 
     # Removes a previously guessed code
     def removeGuessedCodes(self, codes, code):
         for i in codes:
-            if (Code(i).getPinList() == code.getPinList()):
+            if (i == code.getPinList()):
                 codes.remove(i)
                 break
 
@@ -151,7 +135,7 @@ class Knuth:
         #         whitePegs = currResponse.getWhitePegs()
         #     return self.environment.getGuessNumber()
 
-        currGuess = Code([CodePin("red"), CodePin("red"), CodePin("orange"), CodePin("orange")])
+        currGuess = self.firstGuess
         while True:
             self.removeGuessedCodes(self.candidateCodes, currGuess)
             self.removeGuessedCodes(self.allCodes, currGuess)

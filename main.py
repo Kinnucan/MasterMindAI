@@ -46,7 +46,7 @@ def betterAgentTests():
 
 def knuthAgentTest():
     newGame = GameManager()
-    knuth = Knuth(newGame)
+    knuth = Knuth(newGame, verbose=True, firstGuess=makeCode([1,1,2,2,3]))
     knuth.play()
 
 def humanAgentTests():

@@ -6,7 +6,8 @@ class GeneticAlgorithmAgent(Agent):
     #implements the genetic algorithm proposed by Berghman, Goossens, and Leus
 
     def __init__(self, gameManager, verbose=False, seeCode=False, firstGuess = makeCode([1]*PIN_NUMBER), popSize = 150, maxGen = 100, maxSize = 60,
-                 onePointCrossoverProb = .5, colorChangeProb = .03, permutationProb = .03, inversionProb = .02, a = 1, b = 2, EHatChoiceMethod = "min"):
+                 onePointCrossoverProb = .5, colorChangeProb = .03, permutationProb = .03, inversionProb = .02, a = 1, b = 2, EHatChoiceMethod = "min",
+                 fitnessMethod = "changed"):
         Agent.__init__(self, gameManager, verbose, seeCode)
         self.firstGuess = firstGuess # the paper recommends (1,1,2,3) -- "red red orange yellow" -- as an ideal first guess
         self.popSize = popSize + (popSize % 2)# the size of the initial population
@@ -23,6 +24,9 @@ class GeneticAlgorithmAgent(Agent):
 
         self.EHatChoiceMethod = EHatChoiceMethod  # how an eligible population member is chosen as a guess
         # can equal "random" or "min"
+
+        self.fitnessMethod = fitnessMethod  # if we change the fitness function or not
+        # can equal "changed" or "original"
 
         self.guessNumber = 0
 
@@ -170,11 +174,13 @@ class GeneticAlgorithmAgent(Agent):
             output += abs(newClue.getWhitePegs() - prevClue.getWhitePegs())
             # self.BTime += time.time() - start
         #print(output)
-        #return output
         #okay, what the heck, why does the fitness function give higher values to more inconsistent codes???
         # print("Getting fitness time:", (time.time()-start))
         # self.fitCalls+=1
-        return 1/(output+1)
+        if self.fitnessMethod == "changed":
+            return 1/(output+1)
+        else:
+            return output
 
 
     def chooseFromEHat(self, possibleCodes):

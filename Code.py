@@ -20,13 +20,13 @@ def makeCode(numList):
 def generateNumberPermuations(K, P):
     allPermutations = []
     if P == 0:
-        return allPermutations
+        return [allPermutations]
     for i in range(1, K+1):
         allPermutations += [[i]+permuation for permuation in generateNumberPermuations(K, P-1)]
     return allPermutations
 
 def generateAllCodes():
-    return [makeCode(perm) for perm in generateNumberPermuations(COLOR_NUMBER, PIN_NUMBER)]
+    return [[CodePin(COLOR_LIST[i-1]) for i in perm] for perm in generateNumberPermuations(COLOR_NUMBER, PIN_NUMBER)]
 
 
 
