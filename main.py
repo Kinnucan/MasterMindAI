@@ -9,6 +9,7 @@ from Agents.Knuth import *
 from Agents.RandomEligibleAgent import *
 from Agents.Player import *
 from Agents.GeneticAlgorithmAgent import *
+from Agents.LexicographicAgent import *
 
 def environmentTests():
     testCode = Code([])
@@ -38,15 +39,21 @@ def simpleAgentTests():
 
 def betterAgentTests():
     newGame = GameManager()
-    # randy2 = RandomEligibleAgent(newGame, verbose=True)
-    # randy2.play()
-    genny = GeneticAlgorithmAgent(newGame, verbose=True, firstGuess=makeCode([1,1,2,3]), EHatChoiceMethod="random",maxGen=50)
+    randy2 = RandomEligibleAgent(newGame, verbose=True)
+    randy2.play()
+    newGame = GameManager()
+    wordgirl = LexicographicAgent(newGame, verbose=True)
+    wordgirl.play()
+
+def geneticAlgortihmTest():
+    newGame = GameManager()
+    genny = GeneticAlgorithmAgent(newGame, verbose=True, firstGuess=makeCode([1,1,2,2]))
     genny.play()
 
 
 def knuthAgentTest():
     newGame = GameManager()
-    knuth = Knuth(newGame, verbose=True, firstGuess=makeCode([1,1,2,2,3]))
+    knuth = Knuth(newGame, verbose=True)
     knuth.play()
 
 def humanAgentTests():
@@ -60,8 +67,18 @@ def humanAgentTests():
 
 
 if __name__ == '__main__':
-    # environmentTests()
-    # simpleAgentTests()
-    # humanAgentTests()
+    """
+    A series of tests written to see how our code works.
+    environmentTests just makes sure that our GameManager object runs as expected -- that it can create a code and respond to guesses as expected.
+    simpleAgentTests tests the very primitive Mastermind AIs we wrote. Those AIs were mainly intended to make sure we had coded the Agent object correctly; they do not play Mastermind well.
+    betterAgentTests tests some simple, but effective Mastermind AIs. They are good AIs, but they were not the focus of our project.
+    geneticAlgorithmTest, humanAgentTest, and knuthAgentTest all test the AIs we wrote for this project.
+    Note that because "Felix" interacts with GameManager slightly differently than the other AIs, its testing function is different too.
+    """
+    environmentTests()
+    simpleAgentTests()
+    betterAgentTests()
+    geneticAlgortihmTest()
+    humanAgentTests()
     knuthAgentTest()
-    # betterAgentTests()
+

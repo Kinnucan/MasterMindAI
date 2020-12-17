@@ -1,9 +1,10 @@
 # colored pins which constitute a code
 
-COLOR_LIST = ["red", "orange", "yellow", "green", "blue", "purple"]  # a list of the six acceptable colors
+COLOR_LIST = ["red", "orange", "yellow", "green", "blue", "purple"]  # a list of the acceptable colors
 COLOR_NUMBER = len(COLOR_LIST)
 PIN_NUMBER = 4
-
+# Note that while most of our algorithms are robust as far as changing the numbers of colors and the numbers of pegs is concerned,
+# "Felix" (HumanAgent) is not.
 
 class CodePin:
 

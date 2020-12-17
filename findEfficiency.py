@@ -45,11 +45,18 @@ def doGeneticTests(numberOfTrials, verbose=False, seeCode=False, firstGuess = ma
     print("Average time needed:", timeNeeded / numberOfTrials)
 
 
-print("Knuth algorithm:")
-doKnuthTests(500)
-print("Genetic algorithm:")
-doGeneticTests(100, firstGuess=makeCode([1,1,2,3]))
-print("Genetic algorithm (speedier):")
-doGeneticTests(100, firstGuess=makeCode([1,1,2,3]), EHatChoiceMethod="random", maxGen=150)
-print("Genetic algorithm (with old fitness method):")
-doGeneticTests(100, firstGuess=makeCode([1,1,2,3]), fitnessMethod="original", EHatChoiceMethod="random")
+
+if __name__ == "__main__":
+    """
+    This file is designed to test and compare the efficiency (i.e., runtime) and performance (i.e., average number of needed guesses)
+    of the genetic algorithm and Knuth's algorithm.
+    Note how subtle differences in the genetic algorithm's parameters can drastically change its effectiveness.
+    """
+    print("Knuth algorithm:")
+    doKnuthTests(500)
+    print("Genetic algorithm:")
+    doGeneticTests(100, firstGuess=makeCode([1,1,2,3]))
+    print("Genetic algorithm (speedier):")
+    doGeneticTests(100, firstGuess=makeCode([1,1,2,3]), EHatChoiceMethod="random")
+    print("Genetic algorithm (with old fitness method):")
+    doGeneticTests(100, firstGuess=makeCode([1,1,2,3]), fitnessMethod="original", EHatChoiceMethod="random")

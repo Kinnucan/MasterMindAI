@@ -7,7 +7,7 @@ class GeneticAlgorithmAgent(Agent):
 
     def __init__(self, gameManager, verbose=False, seeCode=False, firstGuess = makeCode([1]*PIN_NUMBER), popSize = 150, maxGen = 100, maxSize = 60,
                  onePointCrossoverProb = .5, colorChangeProb = .03, permutationProb = .03, inversionProb = .02, a = 1, b = 2, EHatChoiceMethod = "min",
-                 fitnessMethod = "changed"):
+                 fitnessMethod = "changed", whatDoIfNoCodesFound = "random"):
         Agent.__init__(self, gameManager, verbose, seeCode)
         self.firstGuess = firstGuess # the paper recommends (1,1,2,3) -- "red red orange yellow" -- as an ideal first guess
         self.popSize = popSize + (popSize % 2)# the size of the initial population
@@ -28,8 +28,24 @@ class GeneticAlgorithmAgent(Agent):
         self.fitnessMethod = fitnessMethod  # if we change the fitness function or not
         # can equal "changed" or "original"
 
+        self.whatDoIfNoCodesFound = whatDoIfNoCodesFound # what to do when the genetic algorithm doesn't find anything
+        # can equal "random" or "continue"
+
         self.guessNumber = 0
 
+    def canContinue(self, currentGen, EHatLength):
+        if self.whatDoIfNoCodesFound == "random":
+            return currentGen <= self.maxGen and EHatLength <= self.maxSize
+        else:
+            if currentGen > self.maxGen:
+                if 0 < EHatLength <= self.maxSize:
+                    if currentGen > self.maxGen+1:
+                        print("Lesser wuh-oh. (" + str(currentGen) + ")")
+                    return False
+                else:
+                    return True
+            else:
+                return EHatLength <= self.maxSize
 
     def createGuess(self):
         self.guessNumber += 1
@@ -47,13 +63,10 @@ class GeneticAlgorithmAgent(Agent):
         # self.crossCalls = 0
         # self.mutCalls = 0
         # self.fitCalls = 0
-        while (currentGen <= self.maxGen and len(EHat) <= self.maxSize):
-            # print(currentGen, end=" ")
+        while (self.canContinue(currentGen, len(EHat))):
             # start = time.time()
             population = self.makeNewPopulation(population)   # deleted copy slicing operator here
             # totMakeNew += time.time() - start
-            # population.sort(key=self.fitness)
-            # print(population[-1], self.fitness(population[-1]))
             for code in population:
                 if (self.isConsistent(code) and code not in EHat):   # check this
                     EHat.append(code)
@@ -157,8 +170,6 @@ class GeneticAlgorithmAgent(Agent):
 
 
     def fitness(self, code):
-        #return 3
-        # start = time.time()
         output = 0
         output+=self.b*PIN_NUMBER*(self.guessNumber-2)
         pastGuesses = self.environment.getGuessList()
@@ -173,9 +184,6 @@ class GeneticAlgorithmAgent(Agent):
             output += self.a*abs(newClue.getBlackPegs() - prevClue.getBlackPegs())
             output += abs(newClue.getWhitePegs() - prevClue.getWhitePegs())
             # self.BTime += time.time() - start
-        #print(output)
-        #okay, what the heck, why does the fitness function give higher values to more inconsistent codes???
-        # print("Getting fitness time:", (time.time()-start))
         # self.fitCalls+=1
         if self.fitnessMethod == "changed":
             return 1/(output+1)
@@ -184,7 +192,6 @@ class GeneticAlgorithmAgent(Agent):
 
 
     def chooseFromEHat(self, possibleCodes):
-        #TODO: Make work.
         # start = time.time()
         if len(possibleCodes) != 0:
             if self.EHatChoiceMethod == "min":
@@ -203,7 +210,6 @@ class GeneticAlgorithmAgent(Agent):
                     if cScore <= smallestRemaining:
                         output = c
                         smallestRemaining = cScore
-                        #print(output, cScore)
             else:
                 return random.choice(possibleCodes)
         else:
